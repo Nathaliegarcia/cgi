@@ -1,0 +1,15 @@
+Options +ExecCGI
+AddHandler cgi-script .py
+
+DirectoryIndex index.html
+
+<Files "*.py">
+    SetHandler cgi-script
+</Files>
+
+# Enable CORS for the proxy
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type"
+</IfModule>

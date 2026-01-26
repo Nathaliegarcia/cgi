@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website to Markdown Converter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Website to Markdown Converter</h1>
+            <p class="subtitle">Convert any website or list of URLs to Markdown format</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="input-group">
+                    <label for="url-input">Enter URLs (one per line) or a single website URL:</label>
+                    <textarea
+                        id="url-input"
+                        placeholder="https://example.com&#10;https://another-site.com&#10;https://third-site.com/page"
+                        rows="6"
+                    ></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button id="convert-btn" class="btn btn-primary">
+                        <span class="btn-text">Convert to Markdown</span>
+                        <span class="btn-loading" style="display: none;">Converting...</span>
+                    </button>
+                    <button id="clear-btn" class="btn btn-secondary">Clear</button>
+                </div>
+            </section>
+
+            <section id="progress-section" class="progress-section" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <p class="progress-text" id="progress-text">Processing...</p>
+            </section>
+
+            <section id="results-section" class="results-section" style="display: none;">
+                <div class="results-header">
+                    <h2>Results</h2>
+                    <button id="download-all-btn" class="btn btn-success">Download All as ZIP</button>
+                </div>
+
+                <div id="single-result" class="single-result" style="display: none;">
+                    <div class="result-actions">
+                        <button class="btn btn-small btn-copy" data-target="single-markdown">Copy</button>
+                        <button class="btn btn-small btn-download" id="single-download-btn">Download</button>
+                    </div>
+                    <pre id="single-markdown" class="markdown-output"></pre>
+                </div>
+
+                <table id="results-table" class="results-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Status</th>
+                            <th>Preview</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="error-section" class="error-section" style="display: none;">
+                <div class="error-message" id="error-message"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Converts HTML content to clean Markdown format</p>
+        </footer>
+    </div>
+
+    <!-- Modal for viewing full markdown -->
+    <div id="modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Markdown Preview</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-actions">
+                    <button class="btn btn-small btn-copy" id="modal-copy-btn">Copy</button>
+                    <button class="btn btn-small btn-download" id="modal-download-btn">Download</button>
+                </div>
+                <pre id="modal-markdown" class="markdown-output"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="converter.js"></script>
+</body>
+</html>
