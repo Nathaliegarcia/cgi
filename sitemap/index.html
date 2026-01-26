@@ -24,6 +24,20 @@
             margin-bottom: 30px;
         }
 
+        .notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #856404;
+        }
+
+        .notice strong {
+            color: #664d03;
+        }
+
         .input-section {
             background: white;
             padding: 20px;
@@ -148,21 +162,6 @@
             color: #004085;
         }
 
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: #ecf0f1;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #3498db;
-            transition: width 0.3s;
-        }
-
         .results-section {
             background: white;
             border-radius: 8px;
@@ -227,7 +226,7 @@
         }
 
         .status-cell {
-            width: 100px;
+            width: 120px;
             text-align: center;
         }
 
@@ -261,16 +260,16 @@
         }
 
         .current-url {
-            background: #fff3cd;
+            background: #e3f2fd;
             padding: 10px 20px;
             font-size: 14px;
-            color: #856404;
+            color: #1565c0;
             border-bottom: 1px solid #eee;
             word-break: break-all;
         }
 
         .current-url strong {
-            color: #333;
+            color: #0d47a1;
         }
 
         @media (max-width: 768px) {
@@ -293,9 +292,15 @@
 <body>
     <h1>Website Crawler - Sitemap Generator</h1>
 
+    <div class="notice">
+        <strong>Note:</strong> This crawler runs entirely in your browser. Due to CORS security policies,
+        it works best on sites that allow cross-origin requests. For other sites, you may need to use a
+        browser extension to disable CORS or run the target site locally.
+    </div>
+
     <div class="input-section">
         <div class="input-group">
-            <input type="text" id="urlInput" placeholder="Enter website URL (e.g., example.com)" />
+            <input type="text" id="urlInput" placeholder="Enter website URL (e.g., https://example.com)" />
             <button id="startBtn">Start Crawl</button>
             <button id="stopBtn" disabled>Stop</button>
             <button id="downloadBtn" disabled>Download</button>
@@ -360,6 +365,30 @@
             var currentUrlText = document.getElementById('currentUrlText');
             var resultsBody = document.getElementById('resultsBody');
 
+            // Tracking parameters to remove
+            var USELESS_PARAMS = [
+                'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+                'fbclid', 'gclid', 'gclsrc', 'dclid', 'zanpid', 'msclkid',
+                '_ga', '_gl', '_hsenc', '_hsmi', 'hsCtaTracking',
+                'mc_cid', 'mc_eid', 'mkt_tok',
+                'ref', 'source', 'share', 'si',
+                'trk', 'trkInfo', 'trackingId',
+                'sessionid', 'session_id', 'sid',
+                '__cf_chl_jschl_tk__', '__cf_chl_captcha_tk__',
+                'ncid', 'sr_share', 'spm', 'pf_rd_r', 'pf_rd_p'
+            ];
+
+            // File extensions to skip
+            var SKIP_EXTENSIONS = [
+                '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.ico', '.bmp',
+                '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+                '.zip', '.rar', '.tar', '.gz', '.7z',
+                '.mp3', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.wav', '.ogg',
+                '.css', '.js', '.json', '.xml', '.rss', '.atom',
+                '.woff', '.woff2', '.ttf', '.eot', '.otf',
+                '.exe', '.dmg', '.apk', '.msi'
+            ];
+
             // State
             var queue = [];
             var visited = {};
@@ -368,50 +397,116 @@
             var isStopped = false;
             var errors = 0;
             var baseDomain = '';
-            var concurrentRequests = 3;
+            var baseOrigin = '';
+            var concurrentRequests = 2;
             var activeRequests = 0;
 
-            // Normalize URL
-            function normalizeUrl(url) {
-                if (!url) return null;
-
-                // Add protocol if missing
-                if (!url.match(/^https?:\/\//i)) {
-                    url = 'https://' + url;
-                }
-
+            // Clean URL by removing tracking parameters and fragments
+            function cleanUrl(url) {
                 try {
                     var parsed = new URL(url);
 
-                    // Remove trailing slash except for root
-                    var path = parsed.pathname;
-                    if (path !== '/' && path.endsWith('/')) {
-                        path = path.slice(0, -1);
+                    // Remove fragment
+                    parsed.hash = '';
+
+                    // Filter out useless parameters
+                    var params = new URLSearchParams(parsed.search);
+                    var newParams = new URLSearchParams();
+
+                    params.forEach(function(value, key) {
+                        var keyLower = key.toLowerCase();
+                        var isUseless = USELESS_PARAMS.some(function(p) {
+                            return keyLower === p.toLowerCase();
+                        });
+                        if (!isUseless) {
+                            newParams.append(key, value);
+                        }
+                    });
+
+                    parsed.search = newParams.toString();
+
+                    // Normalize path - remove trailing slash except for root
+                    if (parsed.pathname !== '/' && parsed.pathname.endsWith('/')) {
+                        parsed.pathname = parsed.pathname.slice(0, -1);
                     }
 
-                    return parsed.protocol + '//' + parsed.host + path + parsed.search;
+                    return parsed.href;
                 } catch (e) {
                     return null;
                 }
             }
 
-            // Extract domain from URL
-            function getDomain(url) {
+            // Check if URL should be skipped (non-HTML resources)
+            function shouldSkipUrl(url) {
                 try {
-                    return new URL(url).hostname;
+                    var pathname = new URL(url).pathname.toLowerCase();
+                    return SKIP_EXTENSIONS.some(function(ext) {
+                        return pathname.endsWith(ext);
+                    });
                 } catch (e) {
-                    return null;
+                    return true;
                 }
             }
 
-            // Check if URL belongs to base domain
+            // Check if URL is internal
             function isInternalUrl(url) {
-                var domain = getDomain(url);
-                if (!domain) return false;
+                try {
+                    var parsed = new URL(url);
 
-                return domain === baseDomain ||
-                       domain === 'www.' + baseDomain ||
-                       'www.' + domain === baseDomain;
+                    // Must be http or https
+                    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                        return false;
+                    }
+
+                    var hostname = parsed.hostname.toLowerCase();
+                    var base = baseDomain.toLowerCase();
+
+                    // Exact match or www variant
+                    return hostname === base ||
+                           hostname === 'www.' + base ||
+                           'www.' + hostname === base;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // Extract links from HTML content
+            function extractLinks(html, pageUrl) {
+                var links = [];
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+
+                // Set base URL for resolving relative links
+                var baseEl = doc.querySelector('base[href]');
+                var baseHref = baseEl ? baseEl.getAttribute('href') : pageUrl;
+
+                // Get all anchor tags
+                var anchors = doc.querySelectorAll('a[href]');
+
+                anchors.forEach(function(anchor) {
+                    var href = anchor.getAttribute('href');
+
+                    if (!href) return;
+
+                    // Skip javascript:, mailto:, tel:, data: links
+                    if (href.match(/^(javascript:|mailto:|tel:|data:|#)/i)) return;
+
+                    try {
+                        // Resolve relative URL
+                        var absoluteUrl = new URL(href, baseHref).href;
+
+                        // Clean and validate
+                        var cleanedUrl = cleanUrl(absoluteUrl);
+
+                        if (cleanedUrl && isInternalUrl(cleanedUrl) && !shouldSkipUrl(cleanedUrl)) {
+                            links.push(cleanedUrl);
+                        }
+                    } catch (e) {
+                        // Invalid URL, skip
+                    }
+                });
+
+                return links;
             }
 
             // Update stats display
@@ -421,7 +516,7 @@
                 errorCount.textContent = errors;
             }
 
-            // Update status badge
+            // Set status badge
             function setStatus(status) {
                 statusBadge.className = 'status ' + status;
                 var labels = {
@@ -433,8 +528,15 @@
                 statusBadge.textContent = labels[status] || status;
             }
 
-            // Add URL to table
-            function addToTable(url, status, statusCode) {
+            // Escape HTML for safe display
+            function escapeHtml(text) {
+                var div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Add URL to results table
+            function addToTable(url, status, message) {
                 // Remove empty state row if exists
                 var emptyRow = resultsBody.querySelector('.empty-state-row');
                 if (emptyRow) {
@@ -445,11 +547,10 @@
                 var index = results.length;
 
                 var badgeClass = status === 'success' ? 'success' : 'error';
-                var badgeText = status === 'success' ? (statusCode || 'OK') : (statusCode || 'Error');
 
                 row.innerHTML = '<td>' + index + '</td>' +
                     '<td class="url-cell"><a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(url) + '</a></td>' +
-                    '<td class="status-cell"><span class="status-badge ' + badgeClass + '">' + badgeText + '</span></td>';
+                    '<td class="status-cell"><span class="status-badge ' + badgeClass + '">' + escapeHtml(message) + '</span></td>';
 
                 resultsBody.appendChild(row);
 
@@ -458,84 +559,61 @@
                 container.scrollTop = container.scrollHeight;
             }
 
-            // Escape HTML
-            function escapeHtml(text) {
-                var div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
             // Add URL to queue if not visited
             function enqueue(url) {
-                var normalized = normalizeUrl(url);
-                if (!normalized) return;
+                var cleaned = cleanUrl(url);
+                if (!cleaned) return;
 
-                if (!isInternalUrl(normalized)) return;
+                if (!isInternalUrl(cleaned)) return;
 
-                if (visited[normalized]) return;
+                if (shouldSkipUrl(cleaned)) return;
 
-                visited[normalized] = 'queued';
-                queue.push(normalized);
-                updateStats();
+                if (visited[cleaned]) return;
+
+                visited[cleaned] = 'queued';
+                queue.push(cleaned);
             }
 
-            // Crawl a single URL
+            // Fetch and crawl a single URL
             function crawlUrl(url) {
                 return new Promise(function(resolve) {
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('GET', 'crawler.cgi?url=' + encodeURIComponent(url), true);
-                    xhr.timeout = 30000;
-
-                    xhr.onload = function() {
-                        if (xhr.status === 200) {
-                            try {
-                                var data = JSON.parse(xhr.responseText);
-                                resolve(data);
-                            } catch (e) {
-                                resolve({
-                                    success: false,
-                                    url: url,
-                                    links: [],
-                                    status: 0,
-                                    message: 'Invalid JSON response'
-                                });
-                            }
-                        } else {
-                            resolve({
-                                success: false,
-                                url: url,
-                                links: [],
-                                status: xhr.status,
-                                message: 'HTTP Error'
-                            });
+                    fetch(url, {
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit',
+                        headers: {
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
                         }
-                    };
+                    })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
 
-                    xhr.onerror = function() {
-                        resolve({
-                            success: false,
-                            url: url,
-                            links: [],
-                            status: 0,
-                            message: 'Network Error'
+                        var contentType = response.headers.get('content-type') || '';
+                        if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
+                            return { success: true, url: url, links: [], message: 'Non-HTML' };
+                        }
+
+                        return response.text().then(function(html) {
+                            var links = extractLinks(html, url);
+                            return { success: true, url: url, links: links, message: 'OK' };
                         });
-                    };
-
-                    xhr.ontimeout = function() {
-                        resolve({
-                            success: false,
-                            url: url,
-                            links: [],
-                            status: 0,
-                            message: 'Timeout'
-                        });
-                    };
-
-                    xhr.send();
+                    })
+                    .then(function(result) {
+                        resolve(result);
+                    })
+                    .catch(function(error) {
+                        var message = error.message || 'Error';
+                        if (message.includes('Failed to fetch') || message.includes('NetworkError')) {
+                            message = 'CORS/Network';
+                        }
+                        resolve({ success: false, url: url, links: [], message: message });
+                    });
                 });
             }
 
-            // Process next URL in queue
+            // Process next URLs in queue
             function processNext() {
                 if (isStopped || !isRunning) return;
 
@@ -550,12 +628,13 @@
                     return;
                 }
 
-                // Start multiple concurrent requests
+                // Start concurrent requests
                 while (activeRequests < concurrentRequests && queue.length > 0) {
                     var url = queue.shift();
                     activeRequests++;
 
                     currentUrlText.textContent = url;
+                    updateStats();
 
                     (function(currentUrl) {
                         crawlUrl(currentUrl).then(function(data) {
@@ -571,9 +650,9 @@
                             if (data.success) {
                                 results.push({
                                     url: currentUrl,
-                                    status: data.status
+                                    status: 'success'
                                 });
-                                addToTable(currentUrl, 'success', data.status);
+                                addToTable(currentUrl, 'success', data.message);
 
                                 // Enqueue discovered links
                                 data.links.forEach(function(link) {
@@ -583,10 +662,10 @@
                                 errors++;
                                 results.push({
                                     url: currentUrl,
-                                    status: data.status || 'Error',
+                                    status: 'error',
                                     error: data.message
                                 });
-                                addToTable(currentUrl, 'error', data.message || data.status);
+                                addToTable(currentUrl, 'error', data.message);
                             }
 
                             updateStats();
@@ -606,7 +685,22 @@
                     return;
                 }
 
-                var normalizedUrl = normalizeUrl(inputUrl);
+                // Add protocol if missing
+                if (!inputUrl.match(/^https?:\/\//i)) {
+                    inputUrl = 'https://' + inputUrl;
+                }
+
+                var normalizedUrl;
+                try {
+                    var parsed = new URL(inputUrl);
+                    baseDomain = parsed.hostname;
+                    baseOrigin = parsed.origin;
+                    normalizedUrl = cleanUrl(inputUrl);
+                } catch (e) {
+                    alert('Invalid URL');
+                    return;
+                }
+
                 if (!normalizedUrl) {
                     alert('Invalid URL');
                     return;
@@ -620,9 +714,6 @@
                 isRunning = true;
                 isStopped = false;
                 activeRequests = 0;
-
-                // Set base domain
-                baseDomain = getDomain(normalizedUrl);
 
                 // Clear table
                 resultsBody.innerHTML = '';
@@ -650,13 +741,14 @@
                 downloadBtn.disabled = results.length === 0;
             }
 
-            // Download results
+            // Download results as text file
             function downloadResults() {
                 if (results.length === 0) return;
 
-                var urls = results.map(function(r) {
-                    return r.url;
-                }).join('\n');
+                var urls = results
+                    .filter(function(r) { return r.status === 'success'; })
+                    .map(function(r) { return r.url; })
+                    .join('\n');
 
                 var blob = new Blob([urls], { type: 'text/plain' });
                 var url = URL.createObjectURL(blob);

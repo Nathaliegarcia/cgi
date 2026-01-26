@@ -1,0 +1,5 @@
+DirectoryIndex index.html
+
+# Set proper MIME types
+AddType text/html .html
+AddType text/plain .txt
