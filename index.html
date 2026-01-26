@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Crawler - Sitemap Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        #urlInput {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #urlInput:focus {
+            border-color: #3498db;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, opacity 0.2s;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #startBtn {
+            background: #3498db;
+            color: white;
+        }
+
+        #startBtn:hover:not(:disabled) {
+            background: #2980b9;
+        }
+
+        #stopBtn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        #stopBtn:hover:not(:disabled) {
+            background: #c0392b;
+        }
+
+        #downloadBtn {
+            background: #27ae60;
+            color: white;
+        }
+
+        #downloadBtn:hover:not(:disabled) {
+            background: #219a52;
+        }
+
+        .stats-section {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status.idle {
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        .status.running {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.stopped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.completed {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #ecf0f1;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .results-header {
+            padding: 15px 20px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .url-cell {
+            word-break: break-all;
+            max-width: 600px;
+        }
+
+        .url-cell a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .url-cell a:hover {
+            text-decoration: underline;
+        }
+
+        .status-cell {
+            width: 100px;
+            text-align: center;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .current-url {
+            background: #fff3cd;
+            padding: 10px 20px;
+            font-size: 14px;
+            color: #856404;
+            border-bottom: 1px solid #eee;
+            word-break: break-all;
+        }
+
+        .current-url strong {
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+
+            .stats-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            th, td {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Website Crawler - Sitemap Generator</h1>
+
+    <div class="input-section">
+        <div class="input-group">
+            <input type="text" id="urlInput" placeholder="Enter website URL (e.g., example.com)" />
+            <button id="startBtn">Start Crawl</button>
+            <button id="stopBtn" disabled>Stop</button>
+            <button id="downloadBtn" disabled>Download</button>
+        </div>
+    </div>
+
+    <div class="stats-section">
+        <div class="stat">
+            <span class="stat-label">Crawled:</span>
+            <span class="stat-value" id="crawledCount">0</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Queue:</span>
+            <span class="stat-value" id="queueCount">0</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Errors:</span>
+            <span class="stat-value" id="errorCount">0</span>
+        </div>
+        <span class="status idle" id="statusBadge">Idle</span>
+    </div>
+
+    <div class="results-section">
+        <div class="results-header">
+            <h2>Discovered URLs</h2>
+        </div>
+        <div id="currentUrl" class="current-url" style="display: none;">
+            <strong>Crawling:</strong> <span id="currentUrlText"></span>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>URL</th>
+                        <th class="status-cell">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                    <tr class="empty-state-row">
+                        <td colspan="3" class="empty-state">
+                            Enter a URL above and click "Start Crawl" to begin
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // DOM Elements
+            var urlInput = document.getElementById('urlInput');
+            var startBtn = document.getElementById('startBtn');
+            var stopBtn = document.getElementById('stopBtn');
+            var downloadBtn = document.getElementById('downloadBtn');
+            var crawledCount = document.getElementById('crawledCount');
+            var queueCount = document.getElementById('queueCount');
+            var errorCount = document.getElementById('errorCount');
+            var statusBadge = document.getElementById('statusBadge');
+            var currentUrlDiv = document.getElementById('currentUrl');
+            var currentUrlText = document.getElementById('currentUrlText');
+            var resultsBody = document.getElementById('resultsBody');
+
+            // State
+            var queue = [];
+            var visited = {};
+            var results = [];
+            var isRunning = false;
+            var isStopped = false;
+            var errors = 0;
+            var baseDomain = '';
+            var concurrentRequests = 3;
+            var activeRequests = 0;
+
+            // Normalize URL
+            function normalizeUrl(url) {
+                if (!url) return null;
+
+                // Add protocol if missing
+                if (!url.match(/^https?:\/\//i)) {
+                    url = 'https://' + url;
+                }
+
+                try {
+                    var parsed = new URL(url);
+
+                    // Remove trailing slash except for root
+                    var path = parsed.pathname;
+                    if (path !== '/' && path.endsWith('/')) {
+                        path = path.slice(0, -1);
+                    }
+
+                    return parsed.protocol + '//' + parsed.host + path + parsed.search;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // Extract domain from URL
+            function getDomain(url) {
+                try {
+                    return new URL(url).hostname;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // Check if URL belongs to base domain
+            function isInternalUrl(url) {
+                var domain = getDomain(url);
+                if (!domain) return false;
+
+                return domain === baseDomain ||
+                       domain === 'www.' + baseDomain ||
+                       'www.' + domain === baseDomain;
+            }
+
+            // Update stats display
+            function updateStats() {
+                crawledCount.textContent = results.length;
+                queueCount.textContent = queue.length;
+                errorCount.textContent = errors;
+            }
+
+            // Update status badge
+            function setStatus(status) {
+                statusBadge.className = 'status ' + status;
+                var labels = {
+                    idle: 'Idle',
+                    running: 'Running',
+                    stopped: 'Stopped',
+                    completed: 'Completed'
+                };
+                statusBadge.textContent = labels[status] || status;
+            }
+
+            // Add URL to table
+            function addToTable(url, status, statusCode) {
+                // Remove empty state row if exists
+                var emptyRow = resultsBody.querySelector('.empty-state-row');
+                if (emptyRow) {
+                    emptyRow.remove();
+                }
+
+                var row = document.createElement('tr');
+                var index = results.length;
+
+                var badgeClass = status === 'success' ? 'success' : 'error';
+                var badgeText = status === 'success' ? (statusCode || 'OK') : (statusCode || 'Error');
+
+                row.innerHTML = '<td>' + index + '</td>' +
+                    '<td class="url-cell"><a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(url) + '</a></td>' +
+                    '<td class="status-cell"><span class="status-badge ' + badgeClass + '">' + badgeText + '</span></td>';
+
+                resultsBody.appendChild(row);
+
+                // Auto-scroll to bottom
+                var container = document.querySelector('.table-container');
+                container.scrollTop = container.scrollHeight;
+            }
+
+            // Escape HTML
+            function escapeHtml(text) {
+                var div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Add URL to queue if not visited
+            function enqueue(url) {
+                var normalized = normalizeUrl(url);
+                if (!normalized) return;
+
+                if (!isInternalUrl(normalized)) return;
+
+                if (visited[normalized]) return;
+
+                visited[normalized] = 'queued';
+                queue.push(normalized);
+                updateStats();
+            }
+
+            // Crawl a single URL
+            function crawlUrl(url) {
+                return new Promise(function(resolve) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', 'crawler.cgi?url=' + encodeURIComponent(url), true);
+                    xhr.timeout = 30000;
+
+                    xhr.onload = function() {
+                        if (xhr.status === 200) {
+                            try {
+                                var data = JSON.parse(xhr.responseText);
+                                resolve(data);
+                            } catch (e) {
+                                resolve({
+                                    success: false,
+                                    url: url,
+                                    links: [],
+                                    status: 0,
+                                    message: 'Invalid JSON response'
+                                });
+                            }
+                        } else {
+                            resolve({
+                                success: false,
+                                url: url,
+                                links: [],
+                                status: xhr.status,
+                                message: 'HTTP Error'
+                            });
+                        }
+                    };
+
+                    xhr.onerror = function() {
+                        resolve({
+                            success: false,
+                            url: url,
+                            links: [],
+                            status: 0,
+                            message: 'Network Error'
+                        });
+                    };
+
+                    xhr.ontimeout = function() {
+                        resolve({
+                            success: false,
+                            url: url,
+                            links: [],
+                            status: 0,
+                            message: 'Timeout'
+                        });
+                    };
+
+                    xhr.send();
+                });
+            }
+
+            // Process next URL in queue
+            function processNext() {
+                if (isStopped || !isRunning) return;
+
+                if (queue.length === 0 && activeRequests === 0) {
+                    // Crawl complete
+                    isRunning = false;
+                    setStatus('completed');
+                    currentUrlDiv.style.display = 'none';
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    downloadBtn.disabled = results.length === 0;
+                    return;
+                }
+
+                // Start multiple concurrent requests
+                while (activeRequests < concurrentRequests && queue.length > 0) {
+                    var url = queue.shift();
+                    activeRequests++;
+
+                    currentUrlText.textContent = url;
+
+                    (function(currentUrl) {
+                        crawlUrl(currentUrl).then(function(data) {
+                            activeRequests--;
+
+                            if (isStopped) {
+                                processNext();
+                                return;
+                            }
+
+                            visited[currentUrl] = 'done';
+
+                            if (data.success) {
+                                results.push({
+                                    url: currentUrl,
+                                    status: data.status
+                                });
+                                addToTable(currentUrl, 'success', data.status);
+
+                                // Enqueue discovered links
+                                data.links.forEach(function(link) {
+                                    enqueue(link);
+                                });
+                            } else {
+                                errors++;
+                                results.push({
+                                    url: currentUrl,
+                                    status: data.status || 'Error',
+                                    error: data.message
+                                });
+                                addToTable(currentUrl, 'error', data.message || data.status);
+                            }
+
+                            updateStats();
+                            processNext();
+                        });
+                    })(url);
+                }
+
+                updateStats();
+            }
+
+            // Start crawling
+            function startCrawl() {
+                var inputUrl = urlInput.value.trim();
+                if (!inputUrl) {
+                    alert('Please enter a URL');
+                    return;
+                }
+
+                var normalizedUrl = normalizeUrl(inputUrl);
+                if (!normalizedUrl) {
+                    alert('Invalid URL');
+                    return;
+                }
+
+                // Reset state
+                queue = [];
+                visited = {};
+                results = [];
+                errors = 0;
+                isRunning = true;
+                isStopped = false;
+                activeRequests = 0;
+
+                // Set base domain
+                baseDomain = getDomain(normalizedUrl);
+
+                // Clear table
+                resultsBody.innerHTML = '';
+
+                // Update UI
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                downloadBtn.disabled = true;
+                setStatus('running');
+                currentUrlDiv.style.display = 'block';
+
+                // Start with initial URL
+                enqueue(normalizedUrl);
+                processNext();
+            }
+
+            // Stop crawling
+            function stopCrawl() {
+                isStopped = true;
+                isRunning = false;
+                setStatus('stopped');
+                currentUrlDiv.style.display = 'none';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                downloadBtn.disabled = results.length === 0;
+            }
+
+            // Download results
+            function downloadResults() {
+                if (results.length === 0) return;
+
+                var urls = results.map(function(r) {
+                    return r.url;
+                }).join('\n');
+
+                var blob = new Blob([urls], { type: 'text/plain' });
+                var url = URL.createObjectURL(blob);
+
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'sitemap-' + baseDomain + '.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // Event listeners
+            startBtn.addEventListener('click', startCrawl);
+            stopBtn.addEventListener('click', stopCrawl);
+            downloadBtn.addEventListener('click', downloadResults);
+
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    startCrawl();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
