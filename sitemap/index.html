@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Crawler - Sitemap Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #856404;
+        }
+
+        .notice strong {
+            color: #664d03;
+        }
+
+        .input-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        #urlInput {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #urlInput:focus {
+            border-color: #3498db;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, opacity 0.2s;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #startBtn {
+            background: #3498db;
+            color: white;
+        }
+
+        #startBtn:hover:not(:disabled) {
+            background: #2980b9;
+        }
+
+        #stopBtn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        #stopBtn:hover:not(:disabled) {
+            background: #c0392b;
+        }
+
+        #downloadBtn {
+            background: #27ae60;
+            color: white;
+        }
+
+        #downloadBtn:hover:not(:disabled) {
+            background: #219a52;
+        }
+
+        .stats-section {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status.idle {
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        .status.running {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.stopped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.completed {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .results-header {
+            padding: 15px 20px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .url-cell {
+            word-break: break-all;
+            max-width: 600px;
+        }
+
+        .url-cell a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .url-cell a:hover {
+            text-decoration: underline;
+        }
+
+        .status-cell {
+            width: 120px;
+            text-align: center;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .current-url {
+            background: #e3f2fd;
+            padding: 10px 20px;
+            font-size: 14px;
+            color: #1565c0;
+            border-bottom: 1px solid #eee;
+            word-break: break-all;
+        }
+
+        .current-url strong {
+            color: #0d47a1;
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+
+            .stats-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            th, td {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Website Crawler - Sitemap Generator</h1>
+
+    <div class="notice">
+        <strong>Note:</strong> This crawler runs entirely in your browser. Due to CORS security policies,
+        it works best on sites that allow cross-origin requests. For other sites, you may need to use a
+        browser extension to disable CORS or run the target site locally.
+    </div>
+
+    <div class="input-section">
+        <div class="input-group">
+            <input type="text" id="urlInput" placeholder="Enter website URL (e.g., https://example.com)" />
+            <button id="startBtn">Start Crawl</button>
+            <button id="stopBtn" disabled>Stop</button>
+            <button id="downloadBtn" disabled>Download</button>
+        </div>
+    </div>
+
+    <div class="stats-section">
+        <div class="stat">
+            <span class="stat-label">Crawled:</span>
+            <span class="stat-value" id="crawledCount">0</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Queue:</span>
+            <span class="stat-value" id="queueCount">0</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Errors:</span>
+            <span class="stat-value" id="errorCount">0</span>
+        </div>
+        <span class="status idle" id="statusBadge">Idle</span>
+    </div>
+
+    <div class="results-section">
+        <div class="results-header">
+            <h2>Discovered URLs</h2>
+        </div>
+        <div id="currentUrl" class="current-url" style="display: none;">
+            <strong>Crawling:</strong> <span id="currentUrlText"></span>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>URL</th>
+                        <th class="status-cell">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                    <tr class="empty-state-row">
+                        <td colspan="3" class="empty-state">
+                            Enter a URL above and click "Start Crawl" to begin
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // DOM Elements
+            var urlInput = document.getElementById('urlInput');
+            var startBtn = document.getElementById('startBtn');
+            var stopBtn = document.getElementById('stopBtn');
+            var downloadBtn = document.getElementById('downloadBtn');
+            var crawledCount = document.getElementById('crawledCount');
+            var queueCount = document.getElementById('queueCount');
+            var errorCount = document.getElementById('errorCount');
+            var statusBadge = document.getElementById('statusBadge');
+            var currentUrlDiv = document.getElementById('currentUrl');
+            var currentUrlText = document.getElementById('currentUrlText');
+            var resultsBody = document.getElementById('resultsBody');
+
+            // Tracking parameters to remove
+            var USELESS_PARAMS = [
+                'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+                'fbclid', 'gclid', 'gclsrc', 'dclid', 'zanpid', 'msclkid',
+                '_ga', '_gl', '_hsenc', '_hsmi', 'hsCtaTracking',
+                'mc_cid', 'mc_eid', 'mkt_tok',
+                'ref', 'source', 'share', 'si',
+                'trk', 'trkInfo', 'trackingId',
+                'sessionid', 'session_id', 'sid',
+                '__cf_chl_jschl_tk__', '__cf_chl_captcha_tk__',
+                'ncid', 'sr_share', 'spm', 'pf_rd_r', 'pf_rd_p'
+            ];
+
+            // File extensions to skip
+            var SKIP_EXTENSIONS = [
+                '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.ico', '.bmp',
+                '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+                '.zip', '.rar', '.tar', '.gz', '.7z',
+                '.mp3', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.wav', '.ogg',
+                '.css', '.js', '.json', '.xml', '.rss', '.atom',
+                '.woff', '.woff2', '.ttf', '.eot', '.otf',
+                '.exe', '.dmg', '.apk', '.msi'
+            ];
+
+            // State
+            var queue = [];
+            var visited = {};
+            var results = [];
+            var isRunning = false;
+            var isStopped = false;
+            var errors = 0;
+            var baseDomain = '';
+            var baseOrigin = '';
+            var concurrentRequests = 2;
+            var activeRequests = 0;
+
+            // Clean URL by removing tracking parameters and fragments
+            function cleanUrl(url) {
+                try {
+                    var parsed = new URL(url);
+
+                    // Remove fragment
+                    parsed.hash = '';
+
+                    // Filter out useless parameters
+                    var params = new URLSearchParams(parsed.search);
+                    var newParams = new URLSearchParams();
+
+                    params.forEach(function(value, key) {
+                        var keyLower = key.toLowerCase();
+                        var isUseless = USELESS_PARAMS.some(function(p) {
+                            return keyLower === p.toLowerCase();
+                        });
+                        if (!isUseless) {
+                            newParams.append(key, value);
+                        }
+                    });
+
+                    parsed.search = newParams.toString();
+
+                    // Normalize path - remove trailing slash except for root
+                    if (parsed.pathname !== '/' && parsed.pathname.endsWith('/')) {
+                        parsed.pathname = parsed.pathname.slice(0, -1);
+                    }
+
+                    return parsed.href;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // Check if URL should be skipped (non-HTML resources)
+            function shouldSkipUrl(url) {
+                try {
+                    var pathname = new URL(url).pathname.toLowerCase();
+                    return SKIP_EXTENSIONS.some(function(ext) {
+                        return pathname.endsWith(ext);
+                    });
+                } catch (e) {
+                    return true;
+                }
+            }
+
+            // Check if URL is internal
+            function isInternalUrl(url) {
+                try {
+                    var parsed = new URL(url);
+
+                    // Must be http or https
+                    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                        return false;
+                    }
+
+                    var hostname = parsed.hostname.toLowerCase();
+                    var base = baseDomain.toLowerCase();
+
+                    // Exact match or www variant
+                    return hostname === base ||
+                           hostname === 'www.' + base ||
+                           'www.' + hostname === base;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // Extract links from HTML content
+            function extractLinks(html, pageUrl) {
+                var links = [];
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+
+                // Set base URL for resolving relative links
+                var baseEl = doc.querySelector('base[href]');
+                var baseHref = baseEl ? baseEl.getAttribute('href') : pageUrl;
+
+                // Get all anchor tags
+                var anchors = doc.querySelectorAll('a[href]');
+
+                anchors.forEach(function(anchor) {
+                    var href = anchor.getAttribute('href');
+
+                    if (!href) return;
+
+                    // Skip javascript:, mailto:, tel:, data: links
+                    if (href.match(/^(javascript:|mailto:|tel:|data:|#)/i)) return;
+
+                    try {
+                        // Resolve relative URL
+                        var absoluteUrl = new URL(href, baseHref).href;
+
+                        // Clean and validate
+                        var cleanedUrl = cleanUrl(absoluteUrl);
+
+                        if (cleanedUrl && isInternalUrl(cleanedUrl) && !shouldSkipUrl(cleanedUrl)) {
+                            links.push(cleanedUrl);
+                        }
+                    } catch (e) {
+                        // Invalid URL, skip
+                    }
+                });
+
+                return links;
+            }
+
+            // Update stats display
+            function updateStats() {
+                crawledCount.textContent = results.length;
+                queueCount.textContent = queue.length;
+                errorCount.textContent = errors;
+            }
+
+            // Set status badge
+            function setStatus(status) {
+                statusBadge.className = 'status ' + status;
+                var labels = {
+                    idle: 'Idle',
+                    running: 'Running',
+                    stopped: 'Stopped',
+                    completed: 'Completed'
+                };
+                statusBadge.textContent = labels[status] || status;
+            }
+
+            // Escape HTML for safe display
+            function escapeHtml(text) {
+                var div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Add URL to results table
+            function addToTable(url, status, message) {
+                // Remove empty state row if exists
+                var emptyRow = resultsBody.querySelector('.empty-state-row');
+                if (emptyRow) {
+                    emptyRow.remove();
+                }
+
+                var row = document.createElement('tr');
+                var index = results.length;
+
+                var badgeClass = status === 'success' ? 'success' : 'error';
+
+                row.innerHTML = '<td>' + index + '</td>' +
+                    '<td class="url-cell"><a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(url) + '</a></td>' +
+                    '<td class="status-cell"><span class="status-badge ' + badgeClass + '">' + escapeHtml(message) + '</span></td>';
+
+                resultsBody.appendChild(row);
+
+                // Auto-scroll to bottom
+                var container = document.querySelector('.table-container');
+                container.scrollTop = container.scrollHeight;
+            }
+
+            // Add URL to queue if not visited
+            function enqueue(url) {
+                var cleaned = cleanUrl(url);
+                if (!cleaned) return;
+
+                if (!isInternalUrl(cleaned)) return;
+
+                if (shouldSkipUrl(cleaned)) return;
+
+                if (visited[cleaned]) return;
+
+                visited[cleaned] = 'queued';
+                queue.push(cleaned);
+            }
+
+            // Fetch and crawl a single URL
+            function crawlUrl(url) {
+                return new Promise(function(resolve) {
+                    fetch(url, {
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit',
+                        headers: {
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                        }
+                    })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+
+                        var contentType = response.headers.get('content-type') || '';
+                        if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
+                            return { success: true, url: url, links: [], message: 'Non-HTML' };
+                        }
+
+                        return response.text().then(function(html) {
+                            var links = extractLinks(html, url);
+                            return { success: true, url: url, links: links, message: 'OK' };
+                        });
+                    })
+                    .then(function(result) {
+                        resolve(result);
+                    })
+                    .catch(function(error) {
+                        var message = error.message || 'Error';
+                        if (message.includes('Failed to fetch') || message.includes('NetworkError')) {
+                            message = 'CORS/Network';
+                        }
+                        resolve({ success: false, url: url, links: [], message: message });
+                    });
+                });
+            }
+
+            // Process next URLs in queue
+            function processNext() {
+                if (isStopped || !isRunning) return;
+
+                if (queue.length === 0 && activeRequests === 0) {
+                    // Crawl complete
+                    isRunning = false;
+                    setStatus('completed');
+                    currentUrlDiv.style.display = 'none';
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    downloadBtn.disabled = results.length === 0;
+                    return;
+                }
+
+                // Start concurrent requests
+                while (activeRequests < concurrentRequests && queue.length > 0) {
+                    var url = queue.shift();
+                    activeRequests++;
+
+                    currentUrlText.textContent = url;
+                    updateStats();
+
+                    (function(currentUrl) {
+                        crawlUrl(currentUrl).then(function(data) {
+                            activeRequests--;
+
+                            if (isStopped) {
+                                processNext();
+                                return;
+                            }
+
+                            visited[currentUrl] = 'done';
+
+                            if (data.success) {
+                                results.push({
+                                    url: currentUrl,
+                                    status: 'success'
+                                });
+                                addToTable(currentUrl, 'success', data.message);
+
+                                // Enqueue discovered links
+                                data.links.forEach(function(link) {
+                                    enqueue(link);
+                                });
+                            } else {
+                                errors++;
+                                results.push({
+                                    url: currentUrl,
+                                    status: 'error',
+                                    error: data.message
+                                });
+                                addToTable(currentUrl, 'error', data.message);
+                            }
+
+                            updateStats();
+                            processNext();
+                        });
+                    })(url);
+                }
+
+                updateStats();
+            }
+
+            // Start crawling
+            function startCrawl() {
+                var inputUrl = urlInput.value.trim();
+                if (!inputUrl) {
+                    alert('Please enter a URL');
+                    return;
+                }
+
+                // Add protocol if missing
+                if (!inputUrl.match(/^https?:\/\//i)) {
+                    inputUrl = 'https://' + inputUrl;
+                }
+
+                var normalizedUrl;
+                try {
+                    var parsed = new URL(inputUrl);
+                    baseDomain = parsed.hostname;
+                    baseOrigin = parsed.origin;
+                    normalizedUrl = cleanUrl(inputUrl);
+                } catch (e) {
+                    alert('Invalid URL');
+                    return;
+                }
+
+                if (!normalizedUrl) {
+                    alert('Invalid URL');
+                    return;
+                }
+
+                // Reset state
+                queue = [];
+                visited = {};
+                results = [];
+                errors = 0;
+                isRunning = true;
+                isStopped = false;
+                activeRequests = 0;
+
+                // Clear table
+                resultsBody.innerHTML = '';
+
+                // Update UI
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                downloadBtn.disabled = true;
+                setStatus('running');
+                currentUrlDiv.style.display = 'block';
+
+                // Start with initial URL
+                enqueue(normalizedUrl);
+                processNext();
+            }
+
+            // Stop crawling
+            function stopCrawl() {
+                isStopped = true;
+                isRunning = false;
+                setStatus('stopped');
+                currentUrlDiv.style.display = 'none';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                downloadBtn.disabled = results.length === 0;
+            }
+
+            // Download results as text file
+            function downloadResults() {
+                if (results.length === 0) return;
+
+                var urls = results
+                    .filter(function(r) { return r.status === 'success'; })
+                    .map(function(r) { return r.url; })
+                    .join('\n');
+
+                var blob = new Blob([urls], { type: 'text/plain' });
+                var url = URL.createObjectURL(blob);
+
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'sitemap-' + baseDomain + '.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // Event listeners
+            startBtn.addEventListener('click', startCrawl);
+            stopBtn.addEventListener('click', stopCrawl);
+            downloadBtn.addEventListener('click', downloadResults);
+
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    startCrawl();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
