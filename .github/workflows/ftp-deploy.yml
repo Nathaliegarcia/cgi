@@ -18,10 +18,10 @@ jobs:
         id: deploy-path
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "path=./" >> $GITHUB_OUTPUT
+            echo "path=./www/" >> $GITHUB_OUTPUT
             echo "Deploying to root (manual trigger)"
           else
-            echo "path=./staging/" >> $GITHUB_OUTPUT
+            echo "path=./www/staging/" >> $GITHUB_OUTPUT
             echo "Deploying to staging folder (pull request)"
           fi
 
