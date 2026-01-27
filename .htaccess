@@ -1,0 +1,13 @@
+# Enable CGI execution
+Options +ExecCGI
+AddHandler cgi-script .py
+
+# Enable URL rewriting
+RewriteEngine On
+
+# Serve index.py for the root directory index
+RewriteCond %{REQUEST_URI} ^/?$
+RewriteRule ^$ /index.py [L]
+
+# Also handle DirectoryIndex
+DirectoryIndex index.py index.html
