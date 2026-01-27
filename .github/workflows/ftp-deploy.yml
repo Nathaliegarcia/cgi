@@ -32,4 +32,10 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: ${{ steps.deploy-path.outputs.path }}
-          dangerous-clean-slate: ${{ github.event_name == 'workflow_dispatch' }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .env
+            logs/**
+            uploads/**
