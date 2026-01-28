@@ -101,7 +101,7 @@ def generate_html(directories):
     if directories:
         html += '        <ul class="directory-list">\n'
         for directory in directories:
-            html += f'            <li><a href="/{directory}/"><span class="folder-icon">📁</span>{directory}</a></li>\n'
+            html += f'            <li><a href="../{directory}/"><span class="folder-icon">📁</span>{directory}</a></li>\n'
         html += '        </ul>\n'
     else:
         html += '        <p class="empty-message">No directories found.</p>\n'
