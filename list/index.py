@@ -5,13 +5,9 @@ Lists all subdirectories in the root and creates links to each.
 """
 
 import os
-import cgitb
 
-# Enable CGI error reporting for debugging
-cgitb.enable()
-
-# Get the directory where this script is located
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Get the parent directory (root) where this script should list from
+SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def get_directories():
@@ -105,7 +101,7 @@ def generate_html(directories):
     if directories:
         html += '        <ul class="directory-list">\n'
         for directory in directories:
-            html += f'            <li><a href="/{directory}/"><span class="folder-icon">📁</span>{directory}</a></li>\n'
+            html += f'            <li><a href="../{directory}/"><span class="folder-icon">📁</span>{directory}</a></li>\n'
         html += '        </ul>\n'
     else:
         html += '        <p class="empty-message">No directories found.</p>\n'
