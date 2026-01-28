@@ -1,0 +1,1 @@
+function M(a,r,s){const h=(t,o)=>Math.sqrt(Math.pow(t[0]-o[0],2)+Math.pow(t[1]-o[1],2)+Math.pow(t[2]-o[2],2)),n=Math.sqrt(Math.pow(255,2)+Math.pow(255,2)+Math.pow(255,2)),i=s/100*n;return h(a,r)<=i}export{M as a};
