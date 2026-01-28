@@ -305,6 +305,12 @@
             <button id="stopBtn" disabled>Stop</button>
             <button id="downloadBtn" disabled>Download</button>
         </div>
+        <div class="proxy-toggle" style="margin-top: 10px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="useLocalProxy">
+                <span>local proxy</span>
+            </label>
+        </div>
     </div>
 
     <div class="stats-section">
@@ -574,43 +580,64 @@
                 queue.push(cleaned);
             }
 
-            // Fetch and crawl a single URL
+            // Fetch and crawl a single URL via CORS proxy
             function crawlUrl(url) {
-                return new Promise(function(resolve) {
-                    fetch(url, {
-                        method: 'GET',
-                        mode: 'cors',
-                        credentials: 'omit',
-                        headers: {
-                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-                        }
-                    })
-                    .then(function(response) {
-                        if (!response.ok) {
-                            throw new Error('HTTP ' + response.status);
-                        }
+                var useLocalProxy = document.getElementById('useLocalProxy').checked;
 
-                        var contentType = response.headers.get('content-type') || '';
-                        if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
-                            return { success: true, url: url, links: [], message: 'Non-HTML' };
-                        }
-
-                        return response.text().then(function(html) {
-                            var links = extractLinks(html, url);
-                            return { success: true, url: url, links: links, message: 'OK' };
+                if (useLocalProxy) {
+                    // Use local proxy
+                    var proxyUrl = '../proxy/proxy.py?url=' + encodeURIComponent(url);
+                    return new Promise(function(resolve) {
+                        fetch(proxyUrl)
+                        .then(function(response) {
+                            return response.json();
+                        })
+                        .then(function(data) {
+                            if (!data.success) {
+                                throw new Error(data.error || 'Failed to fetch URL');
+                            }
+                            var links = extractLinks(data.html, url);
+                            resolve({ success: true, url: url, links: links, message: 'OK' });
+                        })
+                        .catch(function(error) {
+                            var message = error.message || 'Error';
+                            resolve({ success: false, url: url, links: [], message: message });
                         });
-                    })
-                    .then(function(result) {
-                        resolve(result);
-                    })
-                    .catch(function(error) {
-                        var message = error.message || 'Error';
-                        if (message.includes('Failed to fetch') || message.includes('NetworkError')) {
-                            message = 'CORS/Network';
-                        }
-                        resolve({ success: false, url: url, links: [], message: message });
                     });
-                });
+                } else {
+                    // Use codetabs proxy
+                    var proxyUrl = 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(url);
+                    return new Promise(function(resolve) {
+                        fetch(proxyUrl, {
+                            method: 'GET',
+                            mode: 'cors',
+                            credentials: 'omit',
+                            headers: {
+                                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                            }
+                        })
+                        .then(function(response) {
+                            if (!response.ok) {
+                                throw new Error('HTTP ' + response.status);
+                            }
+
+                            return response.text().then(function(html) {
+                                var links = extractLinks(html, url);
+                                return { success: true, url: url, links: links, message: 'OK' };
+                            });
+                        })
+                        .then(function(result) {
+                            resolve(result);
+                        })
+                        .catch(function(error) {
+                            var message = error.message || 'Error';
+                            if (message.includes('Failed to fetch') || message.includes('NetworkError')) {
+                                message = 'CORS/Network';
+                            }
+                            resolve({ success: false, url: url, links: [], message: message });
+                        });
+                    });
+                }
             }
 
             // Process next URLs in queue

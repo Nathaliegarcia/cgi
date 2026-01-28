@@ -73,18 +73,33 @@
             });
     }
 
-    // Fetch URL content via proxy
+    // Fetch URL content via CORS proxy
     async function fetchUrl(url) {
-        const proxyUrl = 'proxy.py?url=' + encodeURIComponent(url);
+        const useLocalProxy = document.getElementById('use-local-proxy').checked;
+        let proxyUrl;
 
-        const response = await fetch(proxyUrl);
-        const data = await response.json();
+        if (useLocalProxy) {
+            // Use local proxy
+            proxyUrl = '../proxy/proxy.py?url=' + encodeURIComponent(url);
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
 
-        if (!data.success) {
-            throw new Error(data.error || 'Failed to fetch URL');
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to fetch URL');
+            }
+
+            return data.html;
+        } else {
+            // Use codetabs proxy
+            proxyUrl = 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(url);
+            const response = await fetch(proxyUrl);
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch URL: ' + response.status);
+            }
+
+            return await response.text();
         }
-
-        return data.html;
     }
 
     // HTML to Markdown converter
