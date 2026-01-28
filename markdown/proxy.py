@@ -3,16 +3,11 @@
 CGI Proxy script to fetch external websites and bypass CORS restrictions.
 """
 
-import cgi
-import cgitb
 import json
 import urllib.request
 import urllib.error
 import urllib.parse
-import sys
 import os
-
-cgitb.enable()
 
 def send_response(status, data, content_type="application/json"):
     """Send HTTP response with proper headers."""
@@ -80,9 +75,10 @@ def main():
         send_response(200, '')
         return
 
-    # Get the URL parameter
-    form = cgi.FieldStorage()
-    url = form.getvalue('url', '')
+    # Get the URL parameter from query string
+    query_string = os.environ.get('QUERY_STRING', '')
+    params = urllib.parse.parse_qs(query_string)
+    url = params.get('url', [''])[0]
 
     if not url:
         send_response(400, {'error': 'Missing URL parameter', 'success': False})

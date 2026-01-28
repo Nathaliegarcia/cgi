@@ -5,10 +5,6 @@ Lists all subdirectories in the root and creates links to each.
 """
 
 import os
-import cgitb
-
-# Enable CGI error reporting for debugging
-cgitb.enable()
 
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
