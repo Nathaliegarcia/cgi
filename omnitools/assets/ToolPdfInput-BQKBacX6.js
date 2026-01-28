@@ -1,1 +1,0 @@
-import{r as o,j as t}from"./index-C_g83nc7.js";import{B as p}from"./BaseFileInput-c8nMlesD.js";function n({...e}){const r=o.useRef(null);return t.jsx(p,{...e,type:"pdf",children:({preview:s})=>t.jsx("iframe",{ref:r,src:s,width:"100%",height:"100%",style:{maxWidth:"500px"}})})}export{n as T};
