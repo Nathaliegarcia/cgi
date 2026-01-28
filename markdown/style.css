@@ -296,16 +296,6 @@ textarea::placeholder {
     color: #f87171;
 }
 
-.preview-text {
-    max-width: 250px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #a0a0a0;
-    font-family: 'Monaco', 'Consolas', monospace;
-    font-size: 0.8rem;
-}
-
 .table-actions {
     display: flex;
     gap: 0.5rem;

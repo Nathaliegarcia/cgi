@@ -602,18 +602,6 @@
             }
             tr.appendChild(statusCell);
 
-            // Preview cell
-            const previewCell = document.createElement('td');
-            if (result.success) {
-                const preview = document.createElement('span');
-                preview.className = 'preview-text';
-                preview.textContent = result.markdown.substring(0, 100) + '...';
-                previewCell.appendChild(preview);
-            } else {
-                previewCell.textContent = '-';
-            }
-            tr.appendChild(previewCell);
-
             // Actions cell
             const actionsCell = document.createElement('td');
             const actionsDiv = document.createElement('div');
