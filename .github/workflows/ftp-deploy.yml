@@ -3,6 +3,8 @@ name: FTP Deploy
 on:
   workflow_dispatch:
     # Manual trigger - deploys to root
+  pull_request:
+    # PR trigger - deploys to staging folder
   push:
     branches:
       - main
@@ -19,9 +21,13 @@ jobs:
       - name: Set deployment path
         id: deploy-path
         run: |
-          # Both workflow_dispatch and push to main deploy to root
-          echo "path=./www/" >> $GITHUB_OUTPUT
-          echo "Deploying to root"
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "path=./www/staging/" >> $GITHUB_OUTPUT
+            echo "Deploying to staging folder (pull request)"
+          else
+            echo "path=./www/" >> $GITHUB_OUTPUT
+            echo "Deploying to root (manual trigger or merge)"
+          fi
 
       - name: Deploy to FTP server
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
