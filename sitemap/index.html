@@ -574,10 +574,11 @@
                 queue.push(cleaned);
             }
 
-            // Fetch and crawl a single URL
+            // Fetch and crawl a single URL via CORS proxy
             function crawlUrl(url) {
+                var proxyUrl = 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(url);
                 return new Promise(function(resolve) {
-                    fetch(url, {
+                    fetch(proxyUrl, {
                         method: 'GET',
                         mode: 'cors',
                         credentials: 'omit',
@@ -588,11 +589,6 @@
                     .then(function(response) {
                         if (!response.ok) {
                             throw new Error('HTTP ' + response.status);
-                        }
-
-                        var contentType = response.headers.get('content-type') || '';
-                        if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
-                            return { success: true, url: url, links: [], message: 'Non-HTML' };
                         }
 
                         return response.text().then(function(html) {
