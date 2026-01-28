@@ -6,8 +6,8 @@ Lists all subdirectories in the root and creates links to each.
 
 import os
 
-# Get the directory where this script is located
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Get the parent directory (root) where this script should list from
+SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def get_directories():
