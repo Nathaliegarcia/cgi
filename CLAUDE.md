@@ -92,6 +92,12 @@ Required GitHub Secrets:
 - `FTP_USERNAME`
 - `FTP_PASSWORD`
 
+## Pull request
+keep the commit synthetic, no need to go into too much details
+Never commit or create pull request with reference to or links to claude code or ai
+update this claude.md with reference to new projects and updates as they are implemented to keep documentation fresh and relevent
+pull source branch at each user interaction to make sure no conflict arise during pr
+
 ## Warning: omnitools Folder
 
 **DO NOT MODIFY the `omnitools/` folder.**
