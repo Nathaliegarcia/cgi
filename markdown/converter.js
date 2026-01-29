@@ -102,11 +102,220 @@
         }
     }
 
+    // Extract SEO meta tags from HTML document
+    // This extracts a broad set of meta tags used for SEO and social sharing
+    function extractMetaTags(doc, url) {
+        const meta = {};
+
+        // Get page title
+        const titleEl = doc.querySelector('title');
+        if (titleEl && titleEl.textContent.trim()) {
+            meta.title = titleEl.textContent.trim();
+        }
+
+        // Get canonical URL
+        const canonicalEl = doc.querySelector('link[rel="canonical"]');
+        if (canonicalEl && canonicalEl.getAttribute('href')) {
+            meta.canonical = canonicalEl.getAttribute('href');
+        }
+
+        // Get language from html tag
+        const htmlEl = doc.querySelector('html');
+        if (htmlEl && htmlEl.getAttribute('lang')) {
+            meta.lang = htmlEl.getAttribute('lang');
+        }
+
+        // Standard meta tags (name attribute)
+        // Being broad here - extracting all common SEO-related meta tags
+        const standardMetaTags = [
+            'description', 'keywords', 'author', 'robots', 'googlebot',
+            'viewport', 'generator', 'theme-color', 'color-scheme',
+            'application-name', 'publisher', 'copyright', 'rating',
+            'revisit-after', 'language', 'coverage', 'distribution',
+            'referrer', 'format-detection', 'apple-mobile-web-app-title',
+            'apple-mobile-web-app-capable', 'apple-mobile-web-app-status-bar-style',
+            'msapplication-TileColor', 'msapplication-config',
+            'mobile-web-app-capable', 'HandheldFriendly', 'MobileOptimized',
+            'subject', 'abstract', 'topic', 'summary', 'classification',
+            'designer', 'reply-to', 'owner', 'url', 'identifier-URL',
+            'directory', 'category', 'coverage', 'distribution', 'rating',
+            'revised', 'revisit-after', 'subtitle', 'target', 'date',
+            'search_date', 'DC.title', 'DC.creator', 'DC.subject',
+            'DC.description', 'DC.publisher', 'DC.contributor', 'DC.date',
+            'DC.type', 'DC.format', 'DC.identifier', 'DC.source', 'DC.language',
+            'DC.relation', 'DC.coverage', 'DC.rights', 'geo.region',
+            'geo.placename', 'geo.position', 'ICBM', 'news_keywords'
+        ];
+
+        standardMetaTags.forEach(name => {
+            const el = doc.querySelector(`meta[name="${name}" i]`);
+            if (el && el.getAttribute('content')) {
+                meta[name] = el.getAttribute('content');
+            }
+        });
+
+        // HTTP-equiv meta tags
+        const httpEquivTags = ['content-type', 'content-language', 'refresh', 'cache-control', 'expires', 'pragma'];
+        httpEquivTags.forEach(name => {
+            const el = doc.querySelector(`meta[http-equiv="${name}" i]`);
+            if (el && el.getAttribute('content')) {
+                meta[`http-equiv-${name}`] = el.getAttribute('content');
+            }
+        });
+
+        // Open Graph meta tags (property attribute starting with "og:")
+        // Extracting ALL og: tags found, not just common ones
+        doc.querySelectorAll('meta[property^="og:"]').forEach(el => {
+            const property = el.getAttribute('property');
+            const content = el.getAttribute('content');
+            if (property && content) {
+                meta[property] = content;
+            }
+        });
+
+        // Twitter Card meta tags (name attribute starting with "twitter:")
+        // Extracting ALL twitter: tags found
+        doc.querySelectorAll('meta[name^="twitter:"]').forEach(el => {
+            const name = el.getAttribute('name');
+            const content = el.getAttribute('content');
+            if (name && content) {
+                meta[name] = content;
+            }
+        });
+
+        // Article meta tags (property attribute starting with "article:")
+        doc.querySelectorAll('meta[property^="article:"]').forEach(el => {
+            const property = el.getAttribute('property');
+            const content = el.getAttribute('content');
+            if (property && content) {
+                meta[property] = content;
+            }
+        });
+
+        // Facebook meta tags (property attribute starting with "fb:")
+        doc.querySelectorAll('meta[property^="fb:"]').forEach(el => {
+            const property = el.getAttribute('property');
+            const content = el.getAttribute('content');
+            if (property && content) {
+                meta[property] = content;
+            }
+        });
+
+        // Product meta tags (property attribute starting with "product:")
+        doc.querySelectorAll('meta[property^="product:"]').forEach(el => {
+            const property = el.getAttribute('property');
+            const content = el.getAttribute('content');
+            if (property && content) {
+                meta[property] = content;
+            }
+        });
+
+        // Music/Video meta tags (for media content)
+        doc.querySelectorAll('meta[property^="music:"], meta[property^="video:"]').forEach(el => {
+            const property = el.getAttribute('property');
+            const content = el.getAttribute('content');
+            if (property && content) {
+                meta[property] = content;
+            }
+        });
+
+        // Book meta tags
+        doc.querySelectorAll('meta[property^="book:"]').forEach(el => {
+            const property = el.getAttribute('property');
+            const content = el.getAttribute('content');
+            if (property && content) {
+                meta[property] = content;
+            }
+        });
+
+        // Profile meta tags
+        doc.querySelectorAll('meta[property^="profile:"]').forEach(el => {
+            const property = el.getAttribute('property');
+            const content = el.getAttribute('content');
+            if (property && content) {
+                meta[property] = content;
+            }
+        });
+
+        // Add source URL
+        meta.source = url;
+
+        // Add extraction timestamp
+        meta.fetched_at = new Date().toISOString();
+
+        return meta;
+    }
+
+    // Generate YAML frontmatter from meta tags object
+    function generateFrontmatter(meta) {
+        if (!meta || Object.keys(meta).length === 0) {
+            return '';
+        }
+
+        const lines = ['---'];
+
+        // Helper to escape YAML values that need quoting
+        const escapeYamlValue = (value) => {
+            if (value === null || value === undefined) return '""';
+            const str = String(value);
+            // Quote if contains special characters or starts with special chars
+            if (str.includes(':') || str.includes('#') || str.includes('"') ||
+                str.includes("'") || str.includes('\n') || str.includes('|') ||
+                str.includes('>') || str.includes('[') || str.includes(']') ||
+                str.includes('{') || str.includes('}') || str.includes('&') ||
+                str.includes('*') || str.includes('!') || str.includes('?') ||
+                str.startsWith(' ') || str.endsWith(' ') ||
+                str.startsWith('@') || str.startsWith('`') ||
+                str === 'true' || str === 'false' || str === 'null' ||
+                str === 'yes' || str === 'no' || str === 'on' || str === 'off' ||
+                /^\d+$/.test(str) || /^\d+\.\d+$/.test(str)) {
+                // Use double quotes and escape internal quotes
+                return '"' + str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') + '"';
+            }
+            return str;
+        };
+
+        // Order keys for better readability
+        // Priority keys first, then alphabetical
+        const priorityKeys = [
+            'title', 'description', 'keywords', 'author', 'canonical',
+            'lang', 'robots', 'og:title', 'og:description', 'og:image',
+            'og:url', 'og:type', 'og:site_name', 'twitter:card',
+            'twitter:title', 'twitter:description', 'twitter:image',
+            'source', 'fetched_at'
+        ];
+
+        const addedKeys = new Set();
+
+        // Add priority keys first (if they exist)
+        priorityKeys.forEach(key => {
+            if (meta.hasOwnProperty(key)) {
+                lines.push(`${key}: ${escapeYamlValue(meta[key])}`);
+                addedKeys.add(key);
+            }
+        });
+
+        // Add remaining keys alphabetically
+        Object.keys(meta)
+            .filter(key => !addedKeys.has(key))
+            .sort()
+            .forEach(key => {
+                lines.push(`${key}: ${escapeYamlValue(meta[key])}`);
+            });
+
+        lines.push('---');
+        return lines.join('\n') + '\n\n';
+    }
+
     // HTML to Markdown converter
     function htmlToMarkdown(html, url) {
         // Create a temporary DOM element
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
+
+        // Extract SEO meta tags before removing elements
+        const metaTags = extractMetaTags(doc, url);
+        const frontmatter = generateFrontmatter(metaTags);
 
         // Remove unwanted elements
         const removeSelectors = [
@@ -130,8 +339,8 @@
         // Clean up the markdown
         markdown = cleanMarkdown(markdown);
 
-        // Add source URL at the top
-        markdown = `> Source: ${url}\n\n---\n\n${markdown}`;
+        // Add frontmatter with SEO meta tags at the top
+        markdown = frontmatter + markdown;
 
         return markdown;
     }
@@ -353,12 +562,14 @@
     // Clean up markdown output
     function cleanMarkdown(markdown) {
         return markdown
-            // Remove excessive newlines
-            .replace(/\n{4,}/g, '\n\n\n')
-            // Remove leading/trailing whitespace from lines
+            // Remove excessive newlines (3+ becomes 2 - standard paragraph separation)
+            .replace(/\n{3,}/g, '\n\n')
+            // Remove lines that are only whitespace
             .split('\n')
             .map(line => line.trimEnd())
             .join('\n')
+            // After trimming, collapse any remaining excessive newlines
+            .replace(/\n{3,}/g, '\n\n')
             // Remove empty bold/italic
             .replace(/\*\*\s*\*\*/g, '')
             .replace(/\*\s*\*/g, '')
