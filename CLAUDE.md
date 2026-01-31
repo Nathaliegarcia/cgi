@@ -10,6 +10,7 @@ cgi/
 ├── markdown/       # Website to Markdown converter (HTML + JS)
 ├── sitemap/        # Website crawler / sitemap generator (HTML + JS)
 ├── proxy/          # CORS proxy script (Python CGI)
+├── screenshot/     # Website screenshot capture (Python CGI)
 ├── omnitools/      # External project - DO NOT MODIFY (see warning below)
 └── .github/        # GitHub Actions workflows (FTP deployment)
 ```
@@ -78,6 +79,14 @@ Python CGI script that fetches external URLs and returns content with CORS heade
 - Accepts URL via query parameter: `?url=<encoded_url>`
 - Returns JSON with HTML content
 - Adds proper CORS headers for cross-origin requests
+
+### /screenshot - Website Screenshot Capture
+Python CGI script that captures screenshots of websites using wkhtmltoimage/wkhtmltopdf.
+- Accepts URL via query parameter: `?url=<encoded_url>`
+- Optional `proxy` parameter: `local` (default) or `external`
+- Optional `pdf` parameter: `true` to generate PDF instead of PNG (default: `false`)
+- Returns PNG image (or PDF) with filename based on domain and timestamp
+- Standard viewport: 1280×800 pixels
 
 ## Deployment
 
