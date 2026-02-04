@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Tool</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Screenshot Tool</h1>
+            <p class="subtitle">Capture website screenshots as PNG or PDF</p>
+        </header>
+
+        <section class="input-section">
+            <label for="url-input">Enter URLs (one per line)</label>
+            <textarea id="url-input" placeholder="https://example.com&#10;https://another-site.com"></textarea>
+
+            <div class="options">
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="pdf-mode">
+                        PDF mode
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="use-local-proxy" checked>
+                        local proxy
+                    </label>
+                </div>
+            </div>
+
+            <button id="capture-btn" class="btn-primary">Capture Screenshots</button>
+        </section>
+
+        <section id="progress-section" class="progress-section hidden">
+            <div class="progress-info">
+                <span id="progress-text">Processing 0 of 0</span>
+                <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+        </section>
+
+        <section id="results-section" class="results-section hidden">
+            <h2>Results</h2>
+            <div id="results-container" class="results-container"></div>
+        </section>
+
+        <section id="error-section" class="error-section hidden">
+            <div id="error-message" class="error-message"></div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
