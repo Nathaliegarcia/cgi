@@ -99,9 +99,10 @@ def capture_screenshot(url, is_pdf, timeout=30):
                 '--margin-right', '10mm',
             ])
         else:
-            # Image-specific options
+            # Image-specific options - height 0 captures full page
             cmd.extend([
                 '--width', '1280',
+                '--height', '0',
                 '--format', 'png',
             ])
 
