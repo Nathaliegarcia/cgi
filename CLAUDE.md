@@ -9,6 +9,7 @@ cgi/
 ├── list/           # Directory index generator (Python CGI)
 ├── markdown/       # Website to Markdown converter (HTML + JS)
 ├── sitemap/        # Website crawler / sitemap generator (HTML + JS)
+├── spidermap/      # Website link graph visualizer (HTML + JS)
 ├── proxy/          # CORS proxy script (Python CGI)
 ├── screenshot/     # Website screenshot capture (Python CGI)
 ├── omnitools/      # External project - DO NOT MODIFY (see warning below)
@@ -52,6 +53,7 @@ For fetching external websites (to bypass CORS restrictions), the project uses a
 
 This pattern is implemented in:
 - `sitemap/index.html` - Website crawler
+- `spidermap/index.html` - Website link graph
 - `markdown/converter.js` - Markdown converter
 
 Each tool includes a checkbox labeled "local proxy" to toggle between the two options.
@@ -73,6 +75,14 @@ Crawls a website and discovers all internal URLs.
 - Removes tracking parameters (utm_*, fbclid, gclid, etc.)
 - Skips non-HTML resources (images, PDFs, etc.)
 - Exports discovered URLs as text file
+
+### /spidermap - Website Link Graph
+Crawls a website and visualizes page connections as an interactive graph.
+- Force-directed graph showing pages as nodes and links as directed edges
+- Tracks which page links to which other pages
+- Configurable crawl depth and max pages limits
+- Pan, zoom, and click nodes to open pages
+- Exports graph data as JSON (nodes + edges)
 
 ### /proxy - CORS Proxy
 Python CGI script that fetches external URLs and returns content with CORS headers.
