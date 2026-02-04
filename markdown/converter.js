@@ -620,7 +620,7 @@
         conversionResults.forEach((result, index) => {
             setTimeout(() => {
                 downloadSingle(result);
-            }, index * 500); // Stagger downloads
+            }, index * 100); // Stagger downloads
         });
     }
 
