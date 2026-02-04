@@ -21,6 +21,7 @@
 
     // State
     var results = [];
+    var downloadableItems = [];
     var isProcessing = false;
 
     // Initialize
@@ -79,6 +80,9 @@
 
         var contentEl = item.querySelector('.result-content');
         var objectUrl = URL.createObjectURL(blob);
+
+        // Store for Download All functionality
+        downloadableItems.push({ url: objectUrl, filename: filename });
 
         if (isPdf) {
             contentEl.innerHTML =
@@ -175,7 +179,7 @@
 
                 // Get filename from Content-Disposition header or generate one
                 var disposition = response.headers.get('content-disposition');
-                var filename = 'screenshot.' + (isPdf ? 'pdf' : 'png');
+                var filename = 'screenshot.' + (isPdf ? 'pdf' : 'jpg');
                 if (disposition) {
                     var match = disposition.match(/filename="(.+)"/);
                     if (match) {
@@ -219,9 +223,11 @@
 
         // Reset results
         results = [];
+        downloadableItems = [];
         resultsContainer.innerHTML = '';
         resultsSection.classList.remove('hidden');
         progressSection.classList.remove('hidden');
+        hideDownloadAllButton();
 
         // Create result items
         var isPdf = pdfMode.checked;
@@ -250,6 +256,11 @@
         var successCount = results.filter(function(r) { return r.success; }).length;
         if (successCount < urls.length) {
             showError('Completed with ' + (urls.length - successCount) + ' error(s)');
+        }
+
+        // Show Download All button if multiple successful downloads
+        if (downloadableItems.length > 1) {
+            showDownloadAllButton();
         }
     }
 
@@ -287,6 +298,48 @@
         var div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    /**
+     * Show Download All button
+     */
+    function showDownloadAllButton() {
+        var existingBtn = document.getElementById('download-all-btn');
+        if (existingBtn) {
+            existingBtn.classList.remove('hidden');
+            return;
+        }
+
+        var btn = document.createElement('button');
+        btn.id = 'download-all-btn';
+        btn.className = 'btn-download-all';
+        btn.textContent = 'Download All (' + downloadableItems.length + ')';
+        btn.addEventListener('click', downloadAll);
+
+        var h2 = resultsSection.querySelector('h2');
+        h2.parentNode.insertBefore(btn, h2.nextSibling);
+    }
+
+    /**
+     * Hide Download All button
+     */
+    function hideDownloadAllButton() {
+        var btn = document.getElementById('download-all-btn');
+        if (btn) {
+            btn.remove();
+        }
+    }
+
+    /**
+     * Download all files
+     */
+    function downloadAll() {
+        var delay = 300;
+        downloadableItems.forEach(function(item, index) {
+            setTimeout(function() {
+                downloadFile(item.url, item.filename);
+            }, index * delay);
+        });
     }
 
 })();

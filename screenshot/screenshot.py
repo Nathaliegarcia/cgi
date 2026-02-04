@@ -63,7 +63,7 @@ def generate_filename(url, is_pdf):
     """Generate filename based on domain and timestamp."""
     domain = get_domain_from_url(url)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    extension = 'pdf' if is_pdf else 'png'
+    extension = 'pdf' if is_pdf else 'jpg'
     return f"{domain}_{timestamp}.{extension}"
 
 
@@ -76,7 +76,7 @@ def capture_screenshot(url, is_pdf, timeout=30):
         suffix = '.pdf'
     else:
         tool = 'wkhtmltoimage'
-        suffix = '.png'
+        suffix = '.jpg'
 
     # Create temporary file for output
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_file:
@@ -99,11 +99,12 @@ def capture_screenshot(url, is_pdf, timeout=30):
                 '--margin-right', '10mm',
             ])
         else:
-            # Image-specific options - height 0 captures full page
+            # Image-specific options - height 0 captures full page, JPEG with compression
             cmd.extend([
                 '--width', '1280',
                 '--height', '0',
-                '--format', 'png',
+                '--format', 'jpg',
+                '--quality', '80',
             ])
 
         # Add URL and output path
@@ -169,7 +170,7 @@ def main():
 
     # Generate filename and send response
     filename = generate_filename(url, is_pdf)
-    content_type = 'application/pdf' if is_pdf else 'image/png'
+    content_type = 'application/pdf' if is_pdf else 'image/jpeg'
     send_image_response(image_data, filename, content_type)
 
 
