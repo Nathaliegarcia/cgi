@@ -26,8 +26,13 @@
     var isProcessing = false;
 
     // Initialize
+    console.log('Script loaded, downloadAllBtn:', downloadAllBtn);
     captureBtn.addEventListener('click', handleCapture);
-    downloadAllBtn.addEventListener('click', downloadAll);
+    if (downloadAllBtn) {
+        downloadAllBtn.addEventListener('click', downloadAll);
+    } else {
+        console.error('downloadAllBtn not found!');
+    }
 
     /**
      * Parse URLs from input textarea
@@ -261,7 +266,10 @@
         }
 
         // Show Download All button if multiple successful downloads
+        console.log('downloadableItems.length:', downloadableItems.length);
+        console.log('downloadAllBtn:', downloadAllBtn);
         if (downloadableItems.length > 1) {
+            console.log('Calling showDownloadAllButton');
             showDownloadAllButton();
         }
     }
@@ -306,8 +314,11 @@
      * Show Download All button
      */
     function showDownloadAllButton() {
+        console.log('showDownloadAllButton called, button:', downloadAllBtn);
+        console.log('Button classes before:', downloadAllBtn.className);
         downloadAllBtn.textContent = 'Download All (' + downloadableItems.length + ')';
         downloadAllBtn.classList.remove('hidden');
+        console.log('Button classes after:', downloadAllBtn.className);
     }
 
     /**
