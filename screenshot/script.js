@@ -16,15 +16,20 @@
     var progressFill = document.getElementById('progress-fill');
     var resultsSection = document.getElementById('results-section');
     var resultsContainer = document.getElementById('results-container');
+    var downloadAllBtn = document.getElementById('download-all-btn');
     var errorSection = document.getElementById('error-section');
     var errorMessage = document.getElementById('error-message');
 
     // State
     var results = [];
+    var downloadableItems = [];
     var isProcessing = false;
 
     // Initialize
     captureBtn.addEventListener('click', handleCapture);
+    if (downloadAllBtn) {
+        downloadAllBtn.addEventListener('click', downloadAll);
+    }
 
     /**
      * Parse URLs from input textarea
@@ -79,6 +84,9 @@
 
         var contentEl = item.querySelector('.result-content');
         var objectUrl = URL.createObjectURL(blob);
+
+        // Store for Download All functionality
+        downloadableItems.push({ url: objectUrl, filename: filename });
 
         if (isPdf) {
             contentEl.innerHTML =
@@ -175,7 +183,7 @@
 
                 // Get filename from Content-Disposition header or generate one
                 var disposition = response.headers.get('content-disposition');
-                var filename = 'screenshot.' + (isPdf ? 'pdf' : 'png');
+                var filename = 'screenshot.' + (isPdf ? 'pdf' : 'jpg');
                 if (disposition) {
                     var match = disposition.match(/filename="(.+)"/);
                     if (match) {
@@ -219,9 +227,11 @@
 
         // Reset results
         results = [];
+        downloadableItems = [];
         resultsContainer.innerHTML = '';
         resultsSection.classList.remove('hidden');
         progressSection.classList.remove('hidden');
+        hideDownloadAllButton();
 
         // Create result items
         var isPdf = pdfMode.checked;
@@ -250,6 +260,11 @@
         var successCount = results.filter(function(r) { return r.success; }).length;
         if (successCount < urls.length) {
             showError('Completed with ' + (urls.length - successCount) + ' error(s)');
+        }
+
+        // Show Download All button if multiple successful downloads
+        if (downloadableItems.length > 1) {
+            showDownloadAllButton();
         }
     }
 
@@ -287,6 +302,33 @@
         var div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    /**
+     * Show Download All button
+     */
+    function showDownloadAllButton() {
+        downloadAllBtn.textContent = 'Download All (' + downloadableItems.length + ')';
+        downloadAllBtn.classList.remove('hidden');
+    }
+
+    /**
+     * Hide Download All button
+     */
+    function hideDownloadAllButton() {
+        downloadAllBtn.classList.add('hidden');
+    }
+
+    /**
+     * Download all files
+     */
+    function downloadAll() {
+        var delay = 300;
+        downloadableItems.forEach(function(item, index) {
+            setTimeout(function() {
+                downloadFile(item.url, item.filename);
+            }, index * delay);
+        });
     }
 
 })();
