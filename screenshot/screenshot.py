@@ -83,12 +83,10 @@ def capture_screenshot(url, is_pdf, timeout=30):
         output_path = tmp_file.name
 
     try:
-        # Build command with common options
+        # Build command with basic options (compatible with non-patched QT version)
         cmd = [
             tool,
             '--quiet',
-            '--disable-smart-width',
-            '--javascript-delay', '1000',  # Wait for JS to load
         ]
 
         if is_pdf:
@@ -104,7 +102,6 @@ def capture_screenshot(url, is_pdf, timeout=30):
             # Image-specific options
             cmd.extend([
                 '--width', '1280',
-                '--height', '800',
                 '--format', 'png',
             ])
 
