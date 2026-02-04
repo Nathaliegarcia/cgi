@@ -16,6 +16,7 @@
     var progressFill = document.getElementById('progress-fill');
     var resultsSection = document.getElementById('results-section');
     var resultsContainer = document.getElementById('results-container');
+    var downloadAllBtn = document.getElementById('download-all-btn');
     var errorSection = document.getElementById('error-section');
     var errorMessage = document.getElementById('error-message');
 
@@ -26,6 +27,7 @@
 
     // Initialize
     captureBtn.addEventListener('click', handleCapture);
+    downloadAllBtn.addEventListener('click', downloadAll);
 
     /**
      * Parse URLs from input textarea
@@ -304,30 +306,15 @@
      * Show Download All button
      */
     function showDownloadAllButton() {
-        var existingBtn = document.getElementById('download-all-btn');
-        if (existingBtn) {
-            existingBtn.classList.remove('hidden');
-            return;
-        }
-
-        var btn = document.createElement('button');
-        btn.id = 'download-all-btn';
-        btn.className = 'btn-download-all';
-        btn.textContent = 'Download All (' + downloadableItems.length + ')';
-        btn.addEventListener('click', downloadAll);
-
-        var h2 = resultsSection.querySelector('h2');
-        h2.parentNode.insertBefore(btn, h2.nextSibling);
+        downloadAllBtn.textContent = 'Download All (' + downloadableItems.length + ')';
+        downloadAllBtn.classList.remove('hidden');
     }
 
     /**
      * Hide Download All button
      */
     function hideDownloadAllButton() {
-        var btn = document.getElementById('download-all-btn');
-        if (btn) {
-            btn.remove();
-        }
+        downloadAllBtn.classList.add('hidden');
     }
 
     /**

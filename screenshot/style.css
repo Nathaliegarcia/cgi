@@ -158,8 +158,6 @@ textarea::placeholder {
     transition: all 0.3s ease;
     background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
     color: #fff;
-    margin-bottom: 1.5rem;
-    display: block;
 }
 
 .btn-download-all:hover {
@@ -207,6 +205,17 @@ textarea::placeholder {
     border-radius: 12px;
     padding: 2rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.results-header h2 {
+    margin-bottom: 0;
 }
 
 .results-container {
