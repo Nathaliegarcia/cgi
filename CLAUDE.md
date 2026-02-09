@@ -12,6 +12,7 @@ cgi/
 ├── spidermap/      # Website link graph visualizer (HTML + JS)
 ├── proxy/          # CORS proxy script (Python CGI)
 ├── screenshot/     # Website screenshot capture (Python CGI)
+├── seo/            # SEO documentation & best practices (Markdown docs)
 ├── omnitools/      # External project - DO NOT MODIFY (see warning below)
 └── .github/        # GitHub Actions workflows (FTP deployment)
 ```
@@ -89,6 +90,12 @@ Python CGI script that fetches external URLs and returns content with CORS heade
 - Accepts URL via query parameter: `?url=<encoded_url>`
 - Returns JSON with HTML content
 - Adds proper CORS headers for cross-origin requests
+
+### /seo - SEO Documentation
+Collection of SEO best practices and guidelines from authoritative sources.
+- Each source documented in a separate Markdown file for comparison and traceability
+- Sources include: Yoast SEO, All in One SEO, Rank Math, SEOPress, The SEO Framework, Google Search Central, Moz, Ahrefs
+- README.md contains cross-source comparison tables and conflict notes
 
 ### /screenshot - Website Screenshot Capture
 Python CGI script that captures screenshots of websites using wkhtmltoimage/wkhtmltopdf.
