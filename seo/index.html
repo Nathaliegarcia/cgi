@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SEO Analyzer</h1>
+            <p class="subtitle">Audit any webpage against 40+ SEO best practices from industry-leading sources</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="input-group">
+                    <label for="url-input">Enter URLs to analyze (one per line):</label>
+                    <textarea
+                        id="url-input"
+                        placeholder="https://example.com&#10;https://another-site.com/page&#10;https://third-site.com/blog/article"
+                        rows="4"
+                    ></textarea>
+                </div>
+
+                <div class="input-row">
+                    <div class="proxy-toggle">
+                        <label>
+                            <input type="checkbox" id="use-local-proxy">
+                            local proxy
+                        </label>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="analyze-btn" class="btn btn-primary">
+                        <span class="btn-text">Analyze SEO</span>
+                        <span class="btn-loading-text" style="display: none;">Analyzing...</span>
+                    </button>
+                    <button id="clear-btn" class="btn btn-secondary">Clear</button>
+                </div>
+            </section>
+
+            <section id="progress-section" class="progress-section" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <p class="progress-text" id="progress-text">Processing...</p>
+            </section>
+
+            <section id="results-section" class="results-section" style="display: none;">
+                <div class="results-header">
+                    <h2>Results</h2>
+                    <div class="results-header-actions">
+                        <button id="download-all-btn" class="btn btn-success btn-small">Download All Reports</button>
+                    </div>
+                </div>
+
+                <!-- Single result view -->
+                <div id="single-result" style="display: none;"></div>
+
+                <!-- Multiple results table view -->
+                <table id="results-table" class="results-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Score</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody"></tbody>
+                </table>
+            </section>
+
+            <section id="error-section" class="error-section" style="display: none;">
+                <div class="error-message" id="error-message"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Rules sourced from Yoast, AIOSEO, Rank Math, SEOPress, The SEO Framework, Google, Moz &amp; Ahrefs</p>
+        </footer>
+    </div>
+
+    <!-- Modal for detailed report -->
+    <div id="modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">SEO Report</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="analyzer.js"></script>
+</body>
+</html>
