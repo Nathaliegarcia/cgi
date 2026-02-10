@@ -12,6 +12,7 @@ cgi/
 ├── spidermap/      # Website link graph visualizer (HTML + JS)
 ├── proxy/          # CORS proxy script (Python CGI)
 ├── screenshot/     # Website screenshot capture (Python CGI)
+├── seo/            # SEO analyzer tool & documentation (HTML + JS + Markdown docs)
 ├── omnitools/      # External project - DO NOT MODIFY (see warning below)
 └── .github/        # GitHub Actions workflows (FTP deployment)
 ```
@@ -55,6 +56,7 @@ This pattern is implemented in:
 - `sitemap/index.html` - Website crawler
 - `spidermap/index.html` - Website link graph
 - `markdown/converter.js` - Markdown converter
+- `seo/analyzer.js` - SEO analyzer
 
 Each tool includes a checkbox labeled "local proxy" to toggle between the two options.
 
@@ -89,6 +91,15 @@ Python CGI script that fetches external URLs and returns content with CORS heade
 - Accepts URL via query parameter: `?url=<encoded_url>`
 - Returns JSON with HTML content
 - Adds proper CORS headers for cross-origin requests
+
+### /seo - SEO Analyzer & Documentation
+SEO audit tool that analyzes any webpage against 40+ best practices from industry sources.
+- Supports single URL or batch processing (multiple URLs)
+- Scores pages on a 0-100 scale with weighted rules
+- Expandable rule details with found values, fail reasons, and fix suggestions
+- Category tabs: Meta, Headings, Content, Images, Links, Social/OG, Technical, etc.
+- Exports reports as downloadable text files
+- Includes Markdown documentation files per source for reference (Yoast, AIOSEO, Rank Math, SEOPress, The SEO Framework, Google, Moz, Ahrefs)
 
 ### /screenshot - Website Screenshot Capture
 Python CGI script that captures screenshots of websites using wkhtmltoimage/wkhtmltopdf.
